@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify 
-from  data.validation import is_valid_ticker
+from data.yahoo_finance import top_five_day_over_day
 
 app = Flask(__name__)
 
@@ -17,20 +17,24 @@ def sampleAPI():
 
     #range parameter 
     try:
-        date_range = request.args.get('range') 
+        date_range = request.args.get('range') #Todo: Add validation for the range so it is between 1 month and 2 years
     except:
         return jsonify({'error': 'No range provided'}), 400
+    
+    valid_ranges = ["1mo", "3mo", "6mo", "1y", "2y"]
+    if date_range not in valid_ranges:
+        return jsonify({'error': 'provide a valid range between 1 month and 2 years'}), 400
 
-    #Validating all stock ticker
-    invalid_tickers = list(filter(lambda x: not is_valid_ticker(x), tickers_list))
-    if len(invalid_tickers): 
-        return jsonify({'error': 'Please Correct Invalid Tickers - ' + str(invalid_tickers) }), 400
 
 
     #Todo: display top 5 day over day percent moves by absolute value for specified stocks
-
+    res = list(map(lambda x: top_five_day_over_day(x, date_range), tickers))
     
-    return jsonify({'tickers': tickers_list, 'range': date_range})
+    #Todo: Finish looping through and running function on all tickers and then debug
+
+
+    return top_five_day_over_day(tickers_list[0], date_range)
+
 
 
 
