@@ -4,9 +4,8 @@ import json
 from datetime import datetime, timedelta, timezone
 
 async def fetch_stock_data(ticker, range='3mo'):
-    #Usage: makes a get request to the correct query1 yahoo finance api
+    #Usage: makes a get request to the yahoo finance api and returns the response    
     url = f"https://query1.finance.yahoo.com/v7/finance/chart/{ticker}?range={range}&interval=1d&indicators=quote&includeTimestamps=true"
-    print(url)
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
             if response.status == 200:
@@ -16,10 +15,12 @@ async def fetch_stock_data(ticker, range='3mo'):
                 print("Error fetching data:", response.status)
                 return None
 
+
 def calculate_day_over_day_changes(adjclose_values, date_times_est):
+    #Usage: returns the day over day values for a given ticker 
     day_over_day_changes = []
     pointer_current = 1
-    pointer_previous = 0
+    pointer_previous = 0 #I used a two pointer approach - o(n) time complexity
 
     while pointer_current < len(adjclose_values):
         prev_value = adjclose_values[pointer_previous]
@@ -38,6 +39,7 @@ def calculate_day_over_day_changes(adjclose_values, date_times_est):
 
 
 def top_five_day_over_day(ticker, range):
+    #Usage: returns the top five day over day values and their dates given a ticker and range parameter.
     stock_data = asyncio.run(fetch_stock_data(ticker, range))
     if stock_data:
         response = json.loads(stock_data)
@@ -48,8 +50,6 @@ def top_five_day_over_day(ticker, range):
         est_offset = timedelta(seconds=-gmt_offset)
         date_times_est = [datetime.fromtimestamp(ts, tz=timezone(est_offset)) for ts in timestamps]
 
-
-        # Calculate day-over-day percent change
         day_over_day_changes = calculate_day_over_day_changes(adjclose_values, date_times_est)
 
         top_five_changes = sorted(day_over_day_changes, key=lambda x: abs(x['move']), reverse=True)[:5]
