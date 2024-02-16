@@ -10,10 +10,10 @@ async def fetch_stock_data(ticker, range='3mo'):
         async with session.get(url) as response:
             if response.status == 200:
                 response_content = await response.read()
-                return response_content
+                return {"connected_to_yahoo_finance": True, "response": response_content}
             else:
                 print("Error fetching data:", response.status)
-                return None
+                return {"connected_to_yahoo_finance": False, "response": None}
 
 
 def calculate_day_over_day_changes(adjclose_values, date_times_est):
@@ -30,7 +30,7 @@ def calculate_day_over_day_changes(adjclose_values, date_times_est):
             change = 100 * (current_value / prev_value - 1)
         else: #Edge case - division by zero
             change = None
-        day_over_day_changes.append({"date": date.strftime('%Y-%m-%d'), "move": change})
+        day_over_day_changes.append({"date": date.strftime("%Y-%m-%d"), "move": change})
 
         pointer_previous += 1
         pointer_current += 1
@@ -40,18 +40,29 @@ def calculate_day_over_day_changes(adjclose_values, date_times_est):
 
 def top_five_day_over_day(ticker, range):
     #Usage: returns the top five day over day values and their dates given a ticker and range parameter.
+    valid_ranges = ["1mo", "3mo", "6mo", "1y", "2y"]
+    if range not in valid_ranges:
+        return {"json_parsed": False, "top_five_changes": None}    
+
     stock_data = asyncio.run(fetch_stock_data(ticker, range))
     if stock_data:
+        stock_data = stock_data["response"]
+        json_parsed = False
         response = json.loads(stock_data)
         result = response['chart']['result'][0]
         adjclose_values = result['indicators']['adjclose'][0]['adjclose']
         timestamps = result['timestamp']
         gmt_offset = result['meta']['gmtoffset']
+        json_parsed=True
         est_offset = timedelta(seconds=-gmt_offset)
         date_times_est = [datetime.fromtimestamp(ts, tz=timezone(est_offset)) for ts in timestamps]
 
         day_over_day_changes = calculate_day_over_day_changes(adjclose_values, date_times_est)
 
         top_five_changes = sorted(day_over_day_changes, key=lambda x: abs(x['move']), reverse=True)[:5]
+        
+        for i, obj in enumerate(top_five_changes):
+            top_five_changes[i] = {"date": obj["date"], "move": str(round(obj["move"], 2))}
 
-        return top_five_changes    
+        return {"json_parsed":json_parsed, "top_five_changes": top_five_changes}    
+

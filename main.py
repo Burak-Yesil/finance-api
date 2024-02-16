@@ -29,7 +29,6 @@ def sampleAPI():
     # Tickers parameter
     try:
         tickers = request.args.get('tickers')
-        print(tickers)
         tickers_list = list(map(lambda x: x.upper() , tickers.split(","))) #get individual tickers and make them all caps  
     except: 
         return jsonify({'error': 'No tickers provided'}), 400
@@ -46,7 +45,7 @@ def sampleAPI():
 
 
     #calculate the top five day over day values for each ticker
-    results = list(map(lambda x: top_five_day_over_day(x, date_range), tickers_list))
+    results = list(map(lambda x: top_five_day_over_day(x, date_range)["top_five_changes"], tickers_list))
     res_map = {}
     for i in range(len(results)):
         res_map[tickers_list[i]] = results[i]
@@ -56,4 +55,4 @@ def sampleAPI():
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
