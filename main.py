@@ -25,21 +25,24 @@ def sampleAPI():
         return jsonify({'error': 'Basic authorization header missing'}), 401
 
     #Step 2: Read in tickers parameter
-    try:
-        tickers = request.args.get('tickers')
-        tickers_list = list(map(lambda x: x.upper() , tickers.split(","))) #get individual tickers and make them all caps  
-    except: 
+    tickers = request.args.get('tickers')
+    tickers_list = [ticker.upper() for ticker in tickers.split(",") if ticker]   #get individual tickers and make them all caps  
+    print(len(tickers_list))
+    if len(tickers_list)==0:
         return jsonify({'error': 'No tickers provided'}), 400
 
 
+
     #Step 3: Read in range parameter 
-    try:
-        date_range = request.args.get('range')
-    except:
+    date_range = request.args.get('range')
+    if not date_range:
         return jsonify({'error': 'No range provided'}), 400
+    
     valid_ranges = ["1mo", "3mo", "6mo", "1y", "2y"]
     if date_range not in valid_ranges:
         return jsonify({'error': 'provide a valid range between 1 month and 2 years'}), 400
+
+    print(f"Tickers: {tickers}, Date Range: {date_range}")  # Debugging output
 
 
     #Step 4: Calculate the top five day over day values for each ticker

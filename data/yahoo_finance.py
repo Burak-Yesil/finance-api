@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 
 async def fetch_stock_data(ticker, range='3mo'):
     #Usage: makes a get request to the yahoo finance api and returns the response
-    if  not isinstance(ticker, str) or not isinstance(range, str):
+    if not ticker or not range or not isinstance(ticker, str) or not isinstance(range, str):
         return {"connected_to_yahoo_finance": False, "response": None, "error": "parameters must be strings"}
     url = f"https://query1.finance.yahoo.com/v7/finance/chart/{ticker}?range={range}&interval=1d&indicators=quote&includeTimestamps=true"
     async with aiohttp.ClientSession() as session:
@@ -20,7 +20,7 @@ async def fetch_stock_data(ticker, range='3mo'):
 
 def calculate_day_over_day_changes(adjclose_values, date_times_est):
     #Usage: returns the day over day values for a given ticker 
-    if  not isinstance(adjclose_values, list) or not isinstance(date_times_est, list):
+    if  not adjclose_values or not date_times_est or not isinstance(adjclose_values, list) or not isinstance(date_times_est, list):
         return {"day_over_day_changes": None, "error": "parameters most be lists"}
     day_over_day_changes = []
     pointer_current = 1
@@ -44,7 +44,7 @@ def calculate_day_over_day_changes(adjclose_values, date_times_est):
 
 def top_five_day_over_day(ticker, range):
     #Usage: returns the top five day over day values and their dates given a ticker and range parameter.
-    if  not isinstance(ticker, str) or not isinstance(range, str):
+    if  not ticker or not range or not isinstance(ticker, str) or not isinstance(range, str):
         return  {"json_parsed":False, "top_five_changes": None, "error": "parameters must be strings"}   
     valid_ranges = ["1mo", "3mo", "6mo", "1y", "2y"]
     if range not in valid_ranges:
